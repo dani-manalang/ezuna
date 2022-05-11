@@ -38,7 +38,7 @@ export default function Home() {
       <main>
         <section>
           <header>
-            <Link href="#chapters" scroll>
+            <Link href="/chapters">
               <h1 style={{
                 lineHeight: '50px',
                 cursor: 'pointer'
