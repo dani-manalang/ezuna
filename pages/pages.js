@@ -7,6 +7,7 @@ import axios from 'axios';
 import constants from '../constants';
 import useWindowDimensions from '../hooks/useWindowDimensions';
 import { TiChevronLeft } from 'react-icons/ti';
+import ConnectWalletButton from '../components/ConnectWalletButton';
 
 const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt, withBorder = false }, ref) => {
   return (
@@ -53,16 +54,19 @@ export default function Pages() {
       <main>
         <section>
           <header>
+            <div className='invisible'></div>
             <div className='logo'>
               <Link href='/'>
                 <ImageComponent
                   link="/images/ezuna-kage-metakages-4x-300x300.png"
-                  height={width <= 1023 ? 109 : 213}
-                  width={width <= 1023 ? 109 : 213}
+                  height={213}
+                  width={213}
                   alt="logo"
                 />
               </Link>
             </div>
+
+            <ConnectWalletButton />
           </header>
 
           <div>

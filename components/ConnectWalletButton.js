@@ -97,7 +97,7 @@ export default function ConnectWalletButton() {
   };
 
   return (
-    <div style={{}}>
+    <div className='connect-button'>
       {!account ? (
         <button className='button-dark' onClick={connectWallet}>Connect Wallet</button>
       ) : (
