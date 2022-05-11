@@ -67,15 +67,17 @@ export default function Home() {
             display: 'flex',
             justifyContent: 'center',
           }}>
-            <Image
-              loader={({ src, width, quality }) => {
-                return `${src}?w=${width}&q=${quality || 75}`
-              }}
-              src="/images/1-EzunaBg.png"
-              alt="Picture of the author"
-              width={1300}
-              height={1280}
-            />
+            <div className='img-container'>
+              <Image
+                loader={({ src, width, quality }) => {
+                  return `${src}?w=${width}&q=${quality || 75}`
+                }}
+                src="/images/1-EzunaBg.png"
+                alt="Picture of the author"
+                width={1300}
+                height={1280}
+              />
+            </div>
           </div>
         </section>
 
