@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useReducer, useEffect } from 'react';
-import { providers } from 'ethers'
-import Web3Modal from 'web3modal'
-import { ellipseAddress, getChainData } from '../lib/utilities'
+import React, { useCallback, useReducer, useEffect } from 'react';
+import { providers } from 'ethers';
+import Web3Modal from 'web3modal';
+import { ellipseAddress, getChainData } from '../lib/utilities';
 import providerOptions from '../lib/providerOptions';
 
 let web3Modal
