@@ -76,6 +76,7 @@ export default function Home() {
                 alt="Picture of the author"
                 width={1300}
                 height={1280}
+                priority
               />
             </div>
           </div>
