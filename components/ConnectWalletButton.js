@@ -54,7 +54,7 @@ export default function ConnectWalletButton() {
   const connect = useCallback(async function () {
     try {
       // This is the initial `provider` that is returned when
-      // using web3Modal to connect. Can be MetaMask or WalletConnect.
+      // using web3Modal to connect. For mobile, metamask wont work.
       const provider = await web3Modal.connect()
 
       // We plug the initial `provider` into ethers.js and get back
