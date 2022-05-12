@@ -52,38 +52,46 @@ export default function ConnectWalletButton() {
   const { provider, web3Provider, address, chainId } = state
 
   const connect = useCallback(async function () {
-    // This is the initial `provider` that is returned when
-    // using web3Modal to connect. Can be MetaMask or WalletConnect.
-    const provider = await web3Modal.connect()
+    try {
+      // This is the initial `provider` that is returned when
+      // using web3Modal to connect. Can be MetaMask or WalletConnect.
+      const provider = await web3Modal.connect()
 
-    // We plug the initial `provider` into ethers.js and get back
-    // a Web3Provider. This will add on methods from ethers.js and
-    // event listeners such as `.on()` will be different.
-    const web3Provider = new providers.Web3Provider(provider)
+      // We plug the initial `provider` into ethers.js and get back
+      // a Web3Provider. This will add on methods from ethers.js and
+      // event listeners such as `.on()` will be different.
+      const web3Provider = new providers.Web3Provider(provider)
 
-    const signer = web3Provider.getSigner()
-    const address = await signer.getAddress()
+      const signer = web3Provider.getSigner()
+      const address = await signer.getAddress()
 
-    const network = await web3Provider.getNetwork()
+      const network = await web3Provider.getNetwork()
 
-    dispatch({
-      type: 'SET_WEB3_PROVIDER',
-      provider,
-      web3Provider,
-      address,
-      chainId: network.chainId,
-    })
+      dispatch({
+        type: 'SET_WEB3_PROVIDER',
+        provider,
+        web3Provider,
+        address,
+        chainId: network.chainId,
+      })
+    } catch (error) {
+      console.log({ error })
+    }
   }, [])
 
   const disconnect = useCallback(
     async function () {
-      await web3Modal.clearCachedProvider()
-      if (provider?.disconnect && typeof provider.disconnect === 'function') {
-        await provider.disconnect()
+      try {
+        await web3Modal.clearCachedProvider()
+        if (provider?.disconnect && typeof provider.disconnect === 'function') {
+          await provider.disconnect()
+        }
+        dispatch({
+          type: 'RESET_WEB3_PROVIDER',
+        })
+      } catch (error) {
+        console.log({ error })
       }
-      dispatch({
-        type: 'RESET_WEB3_PROVIDER',
-      })
     },
     [provider]
   )
@@ -101,12 +109,16 @@ export default function ConnectWalletButton() {
   useEffect(() => {
     if (provider?.on) {
       const handleAccountsChanged = (accounts) => {
-        // eslint-disable-next-line no-console
-        console.log('accountsChanged', accounts)
-        dispatch({
-          type: 'SET_ADDRESS',
-          address: accounts[0],
-        })
+        try {
+          // eslint-disable-next-line no-console
+          console.log('accountsChanged', accounts)
+          dispatch({
+            type: 'SET_ADDRESS',
+            address: accounts[0],
+          })
+        } catch (error) {
+          console.log({ error })
+        }
       }
 
       // https://docs.ethers.io/v5/concepts/best-practices/#best-practices--network-changes
