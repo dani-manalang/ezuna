@@ -96,8 +96,8 @@ export default function Chapters() {
                         letterSpacing: '0.02em'
                       }}>
                         {chapter.chapter == 1
-                        ? (<AiFillLock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)
-                        : (<AiFillUnlock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)}
+                          ? (<AiFillUnlock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)
+                        : (<AiFillLock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)}
                         
                         {`CHAPTER ${chapter.chapter}`}
                       </p>
