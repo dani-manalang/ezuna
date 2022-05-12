@@ -14,9 +14,15 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## To access via https
+If you want to test connect to metamask in mobile, this is only possible using walletconnect and accessing localhost via https. See this [step-by-step guide](https://medium.com/@greg.farrow1/nextjs-https-for-a-local-dev-server-98bb441eabd7) to setup https access locally.
+
+```bash
+npm run start-https
+# or
+yarn start-https
+```
 
 ## Learn More
 
