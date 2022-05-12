@@ -1,110 +1,161 @@
-import React, { useState } from 'react';
-import { toHex, truncateAddress } from "../utils";
+import React, { useState, useCallback, useReducer, useEffect } from 'react';
+import { providers } from 'ethers'
+import Web3Modal from 'web3modal'
+import { ellipseAddress, getChainData } from '../lib/utilities'
+import providerOptions from '../lib/providerOptions';
 
-import Onboard from "@web3-onboard/core";
-import injectedModule from "@web3-onboard/injected-wallets";
-import walletLinkModule from "@web3-onboard/walletlink";
-import useWindowDimensions from '../hooks/useWindowDimensions';
+let web3Modal
+if (typeof window !== 'undefined') {
+  web3Modal = new Web3Modal({
+    network: 'mainnet', // optional
+    cacheProvider: true,
+    providerOptions, // required
+  })
+}
 
-const MAINNET_RPC_URL = `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`;
-const ROPSTEN_RPC_URL = `https://ropsten.infura.io/v3/${process.env.INFURA_KEY}`;
-const RINKEBY_RPC_URL = `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`;
+const initialState = {
+  provider: null,
+  web3Provider: null,
+  address: null,
+  chainId: null,
+}
 
-const injected = injectedModule();
-const walletLink = walletLinkModule();
-
-const onboard = Onboard({
-  wallets: [walletLink, injected],
-  chains: [
-    {
-      id: "0x1", // chain ID must be in hexadecimel
-      token: "ETH", // main chain token
-      namespace: "evm",
-      label: "Ethereum Mainnet",
-      rpcUrl: MAINNET_RPC_URL
-    },
-    {
-      id: "0x3",
-      token: "tROP",
-      namespace: "evm",
-      label: "Ethereum Ropsten Testnet",
-      rpcUrl: ROPSTEN_RPC_URL
-    },
-    {
-      id: "0x4",
-      token: "rETH",
-      namespace: "evm",
-      label: "Ethereum Rinkeby Testnet",
-      rpcUrl: RINKEBY_RPC_URL
-    }
-  ],
-  appMetadata: {
-    name: "My App",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
-    description: "My app using Onboard",
-    recommendedInjectedWallets: [
-      { name: "Coinbase", url: "https://wallet.coinbase.com/" },
-      { name: "MetaMask", url: "https://metamask.io" }
-    ]
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_WEB3_PROVIDER':
+      return {
+        ...state,
+        provider: action.provider,
+        web3Provider: action.web3Provider,
+        address: action.address,
+        chainId: action.chainId,
+      }
+    case 'SET_ADDRESS':
+      return {
+        ...state,
+        address: action.address,
+      }
+    case 'SET_CHAIN_ID':
+      return {
+        ...state,
+        chainId: action.chainId,
+      }
+    case 'RESET_WEB3_PROVIDER':
+      return initialState
+    default:
+      throw new Error()
   }
-});
-
+}
 
 export default function ConnectWalletButton() {
-  const [_, setProvider] = useState();
-  const [account, setAccount] = useState();
-  const [error, setError] = useState("");
-  const [chainId, setChainId] = useState();
-  const [network, setNetwork] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-  const { width } = useWindowDimensions()
+  const[state, dispatch] = useReducer(reducer, initialState)
+  const { provider, web3Provider, address, chainId } = state
 
-  const connectWallet = async () => {
-    try {
-      const wallets = await onboard.connectWallet();
-      setIsLoading(true);
-      const { accounts, chains, provider } = wallets[0];
-      setAccount(accounts[0].address);
-      setChainId(chains[0].id);
-      setProvider(provider);
-      setIsLoading(false);
-    } catch (error) {
-      setError(error);
+  const connect = useCallback(async function () {
+    // This is the initial `provider` that is returned when
+    // using web3Modal to connect. Can be MetaMask or WalletConnect.
+    const provider = await web3Modal.connect()
+
+    // We plug the initial `provider` into ethers.js and get back
+    // a Web3Provider. This will add on methods from ethers.js and
+    // event listeners such as `.on()` will be different.
+    const web3Provider = new providers.Web3Provider(provider)
+
+    const signer = web3Provider.getSigner()
+    const address = await signer.getAddress()
+
+    const network = await web3Provider.getNetwork()
+
+    dispatch({
+      type: 'SET_WEB3_PROVIDER',
+      provider,
+      web3Provider,
+      address,
+      chainId: network.chainId,
+    })
+  }, [])
+
+  const disconnect = useCallback(
+    async function () {
+      await web3Modal.clearCachedProvider()
+      if (provider?.disconnect && typeof provider.disconnect === 'function') {
+        await provider.disconnect()
+      }
+      dispatch({
+        type: 'RESET_WEB3_PROVIDER',
+      })
+    },
+    [provider]
+  )
+
+  // Auto connect to the cached provider
+  useEffect(() => {
+    if (web3Modal.cachedProvider) {
+      connect()
     }
-  };
+  }, [connect])
 
-  const switchNetwork = async () => {
-    await onboard.setChain({ chainId: toHex(network) });
-  };
+  // A `provider` should come with EIP-1193 events. We'll listen for those events
+  // here so that when a user switches accounts or networks, we can update the
+  // local React state with that new information.
+  useEffect(() => {
+    if (provider?.on) {
+      const handleAccountsChanged = (accounts) => {
+        // eslint-disable-next-line no-console
+        console.log('accountsChanged', accounts)
+        dispatch({
+          type: 'SET_ADDRESS',
+          address: accounts[0],
+        })
+      }
 
-  const handleNetwork = (e) => {
-    const id = e.target.value;
-    setNetwork(Number(id));
-  };
+      // https://docs.ethers.io/v5/concepts/best-practices/#best-practices--network-changes
+      const handleChainChanged = (_hexChainId) => {
+        window.location.reload()
+      }
 
-  const disconnect = async () => {
-    const [primaryWallet] = await onboard.state.get().wallets;
-    if (!primaryWallet) return;
-    await onboard.disconnectWallet({ label: primaryWallet.label });
-    refreshState();
-  };
+      const handleDisconnect = (error) => {
+        // eslint-disable-next-line no-console
+        console.log('disconnect', error)
+        disconnect()
+      }
 
-  const refreshState = () => {
-    setAccount("");
-    setChainId("");
-    setProvider();
-  };
+      provider.on('accountsChanged', handleAccountsChanged)
+      provider.on('chainChanged', handleChainChanged)
+      provider.on('disconnect', handleDisconnect)
+
+      // Subscription Cleanup
+      return () => {
+        if (provider.removeListener) {
+          provider.removeListener('accountsChanged', handleAccountsChanged)
+          provider.removeListener('chainChanged', handleChainChanged)
+          provider.removeListener('disconnect', handleDisconnect)
+        }
+      }
+    }
+  }, [provider, disconnect])
+
+  const chainData = getChainData(chainId)
 
   return (
     <div className='connect-button'>
-      {!account ? (
-        <button className='button-dark' onClick={connectWallet}>Connect Wallet</button>
+      {address ? (
+        <div>
+          {/* open a modal to disconnect */}
+          <div onClick={disconnect}>
+            <p style={{ textAlign: 'center' }}>{ellipseAddress(address)}</p>
+          </div>
+        </div>
+      ) : web3Provider ? (
+        <button className="button-dark" type="button" onClick={disconnect}>
+          Disconnect
+        </button>
       ) : (
-        <p>
-          {`Account: ${truncateAddress(account)}`}
-        </p>
-      )}
+        // open a modal that shows this button
+        <button className="button-dark" type="button" onClick={connect}>
+          Connect
+        </button>
+      ) }
     </div>
   )
 }
