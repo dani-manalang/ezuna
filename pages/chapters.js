@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import axios from 'axios';
 import constants from '../constants';
-import useWindowDimensions from '../hooks/useWindowDimensions';
 import { AiFillLock, AiFillUnlock } from 'react-icons/ai'
 import ConnectWalletButton from '../components/ConnectWalletButton';
 
