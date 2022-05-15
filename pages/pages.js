@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import axios from 'axios';
 import constants from '../constants';
-import useWindowDimensions from '../hooks/useWindowDimensions';
 import { TiChevronLeft } from 'react-icons/ti';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 
@@ -31,7 +30,6 @@ const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt, wi
 
 export default function Pages() {
   const [pages, setPages] = useState([]);
-  const { width } = useWindowDimensions()
 
   const router = useRouter()
   const { chapterId } = router.query

@@ -3,7 +3,6 @@ html,
 body {
   background: #000;
   color: #fff;
-  /* position: relative !important; */
   min-width: 0;
   overflow: auto;
 }
@@ -51,16 +50,16 @@ header {
   padding: 0 30px;
 }
 
+section {
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+
 .container {
   min-height: 100vh;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-}
-
-section {
-  padding-top: 100px;
-  padding-bottom: 100px;
 }
 
 .logo {
@@ -149,32 +148,6 @@ section {
   width: 200px;
 }
 
-/* MODAL */
-.web3modal-modal-card {
-  width: 400px !important;
-  min-width: unset !important;
-  max-width: unset !important;
-  top: 20vh;
-  left: 30vw;
-}
-
-.web3modal-provider-wrapper {
-  background-color: #424242;
-}
-
-.web3modal-provider-container {
-  flex-direction: row !important;
-  background-color: #424242 !important;
-}
-
-.web3modal-provider-name {
-  color: #FFF !important;
-}
-
-.web3modal-provider-description {
-  display: none;
-}
-
 @media only screen and (max-width: 1023px) {
   .container {
     padding-left: 25px;
@@ -218,9 +191,4 @@ section {
     font-size: 15px;
     padding: 11px 20px 14px 20px;
   }
-
-    .web3modal-modal-card {
-      top: 0;
-      left: 0;
-    }
 }

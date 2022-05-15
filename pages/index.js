@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { forwardRef } from 'react';
 import ConnectWalletButton from '../components/ConnectWalletButton';
-import useWindowDimensions from '../hooks/useWindowDimensions';
 
 const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt }, ref) => {
   return (
@@ -26,7 +25,6 @@ const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt }, 
 
 
 export default function Home() {
-  const { width } = useWindowDimensions();
 
   return (
     <div className='container'>
@@ -41,7 +39,9 @@ export default function Home() {
             <Link href="/chapters">
               <h1 style={{
                 lineHeight: '50px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                textAlign: 'center',
+                display: 'flex'
               }}>Chapters</h1>
             </Link>
             <ConnectWalletButton />
