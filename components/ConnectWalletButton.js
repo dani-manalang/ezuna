@@ -1,8 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import Modal from './Modal';
-import { useWeb3React } from '@web3-react/core';
-import { connectors } from '../lib/connectors';
 import { ellipseAddress } from '../lib/utilities';
 import useOnClickOutside from '../hooks/useOnClickOutside';
 import useConnectWallet from '../hooks/useConnectWallet';
@@ -10,31 +8,32 @@ import useConnectWallet from '../hooks/useConnectWallet';
 export default function ConnectWalletButton() {
   const ref = useRef();
   const [isModalOpen, setModalOpen] = useState(false);
-  const { activate } = useWeb3React();
-
+  const { connect, disconnect, account, loading, hasProvider } = useConnectWallet();
   useOnClickOutside(ref, () => setModalOpen(false));
 
-  const { connect, disconnect, account, loading } = useConnectWallet();
-
   if (loading) {
-    return <button className="button-dark" type="button" disabled>
-      Loading...
-    </button>
+    return <div className='connect-button'>
+      <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
+        Loading...
+      </button>
+    </div>
   }
 
   return (
     <div className='connect-button'>
-      {account ? (
-        <div>
-          <div onClick={() => setModalOpen(true)}>
-            <p style={{ textAlign: 'center', margin: 0 }}>{ellipseAddress(account)}</p>
+      {hasProvider && (
+        account ? (
+          <div>
+            <div onClick={() => setModalOpen(true)}>
+              <p style={{ textAlign: 'center', margin: 0 }}>{ellipseAddress(account)}</p>
+            </div>
           </div>
-        </div>
-      ) : (
+        ) : (
           <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
             Connect
           </button>
-      ) }
+        )
+      )}
 
       <Modal
         ref={ref}
@@ -69,7 +68,7 @@ export default function ConnectWalletButton() {
               }}>
                 <button onClick={() => {
                   setModalOpen(false)
-                  activate(connectors.coinbaseWallet)
+                  connect('coinbaseWallet')
                 }}
                     style={{
                       display: 'flex',
@@ -100,7 +99,7 @@ export default function ConnectWalletButton() {
                 </button>
                 <button onClick={() => {
                   setModalOpen(false)
-                  connect()
+                  connect('injected')
                 }}
                   style={{
                     display: 'flex',

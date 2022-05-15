@@ -1,6 +1,5 @@
-import detectEthereumProvider from "@metamask/detect-provider";
-import { useWeb3React } from "@web3-react/core";
 import { useEffect, useState } from "react";
+import { useWeb3React } from "@web3-react/core";
 import Web3 from 'web3';
 import { connectors } from '../lib/connectors';
 
@@ -10,15 +9,17 @@ let address
 const useConnectWallet = () => {
   const [account, setAccount] = useState()
   const [loading, setLoading] = useState(true)
-  const { activate, deactivate, connector } = useWeb3React();
-  const provider = detectEthereumProvider();
+  const [hasProvider, setHasProvider] = useState(false);
+  const [provider, setProvider] = useState(null);
+  const { activate, deactivate } = useWeb3React();
 
   const connectWalletHandler = () => {
-    if (window.ethereum && window.ethereum.isMetaMask) {
+    if (window.ethereum) {
       web3 = new Web3(window.ethereum);
+      setHasProvider(true);
     } else {
-      web3 = new Web3(window.web3.currentProvider)
       console.log('Need to install MetaMask');  
+      setHasProvider(false)
     }
 
     setTimeout(function () {
@@ -26,40 +27,30 @@ const useConnectWallet = () => {
     }, 500)
   }
 
-  async function connectOnLoad() {
-    try {
-      await activate(connectors.injected)
+  const handleAccountChanged = async (type) => {
+    await activate(connectors[type])
 
+    if (localStorage.getItem('provider') !== null) {
       const account1 = await web3.eth.getAccounts();
 
-      if (account1.length) {
-        address = localStorage.setItem("address", account1[0]);
-        setAccount(account1[0])
-      } else {
-        disconnect()
+      if (type === localStorage.getItem('provider')) {
+        if (account1.length) {
+          address = localStorage.setItem("address", account1[0])
+          localStorage.setItem('provider', type)
+          setAccount(account1[0])
+          setProvider(type)
+        } else {
+          disconnect()
+        }
       }
-    } catch (error) {
-      console.log(error)
     }
-
-    setTimeout(function () {
-      setLoading(false)
-    }, 500)
   }
 
-  async function connect() {
+  async function connect(type) {
     setLoading(true);
 
     try {
-      await activate(connectors.injected)
-      const account1 = await web3.eth.getAccounts();
-
-      if (account1.length) {
-        address = localStorage.setItem("address", account1[0]);
-        setAccount(account1[0])
-      } else {
-        disconnect()
-      }
+      handleAccountChanged(type)
     } catch (error) {
       console.log(error)
     }
@@ -73,19 +64,34 @@ const useConnectWallet = () => {
     try {
       setAccount(null)
       deactivate()
-      localStorage.removeItem("address");
+      localStorage.removeItem("address")
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  const connectOnload = async (type) => {
+    await activate(connectors[type])
+    const account1 = await web3.eth.getAccounts();
+
+    if (account1.length) {
+      address = localStorage.setItem("address", account1[0])
+      localStorage.setItem('provider', type)
+      setAccount(account1[0])
+    } else {
+      disconnect()
     }
   }
 
   useEffect(() => {
     let isMounted = true
     address = localStorage.getItem('address')
+    const cachedProvider = localStorage.getItem('provider')
 
     if (isMounted) {
-      if (address !== null) {
-        connectOnLoad()
+      setProvider(cachedProvider)
+      if (address !== null && cachedProvider !== null) {
+        connectOnload(cachedProvider)
       }
 
       connectWalletHandler()
@@ -97,21 +103,23 @@ const useConnectWallet = () => {
   }, [])
 
   useEffect(() => {
-    if (provider) {
-      ethereum.on('accountsChanged', () => {
+    if (window?.ethereum) {
+      window.ethereum.on('accountsChanged', () => {
+        console.log('accounts changed')
         disconnect()
       });
 
-      ethereum.on('chainChanged', () => {
+      window.ethereum.on('chainChanged', () => {
         if (typeof window !== undefined) {
+          console.log('chain changed')
           window.location.reload();
         }
       })
 
-      ethereum.removeListener('accountsChanged', () => { })
-      ethereum.removeListener('chainChanged', () => { })
+      window.ethereum.removeListener('accountsChanged', () => { })
+      window.ethereum.removeListener('chainChanged', () => { })
     }
-  }, [provider])
+  }, [web3])
 
   return {
     account,
@@ -119,7 +127,10 @@ const useConnectWallet = () => {
     connect,
     disconnect,
     loading,
-    setLoading
+    setLoading,
+    hasProvider,
+    provider,
+    setProvider
   }
 }
 
