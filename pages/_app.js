@@ -1,5 +1,4 @@
 import '../public/styles/globals.css';
-import { ethers } from 'ethers';
 import { Web3ReactProvider } from '@web3-react/core'
 import { Web3Provider } from '@ethersproject/providers'
 
