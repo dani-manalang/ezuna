@@ -1,173 +1,139 @@
-import React, { useCallback, useReducer, useEffect } from 'react';
-import { providers } from 'ethers';
-import Web3Modal from 'web3modal';
-import { ellipseAddress, getChainData } from '../lib/utilities';
-import providerOptions from '../lib/providerOptions';
-
-let web3Modal
-if (typeof window !== 'undefined') {
-  web3Modal = new Web3Modal({
-    network: 'mainnet', // optional
-    cacheProvider: true,
-    providerOptions, // required
-  })
-}
-
-const initialState = {
-  provider: null,
-  web3Provider: null,
-  address: null,
-  chainId: null,
-}
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'SET_WEB3_PROVIDER':
-      return {
-        ...state,
-        provider: action.provider,
-        web3Provider: action.web3Provider,
-        address: action.address,
-        chainId: action.chainId,
-      }
-    case 'SET_ADDRESS':
-      return {
-        ...state,
-        address: action.address,
-      }
-    case 'SET_CHAIN_ID':
-      return {
-        ...state,
-        chainId: action.chainId,
-      }
-    case 'RESET_WEB3_PROVIDER':
-      return initialState
-    default:
-      throw new Error()
-  }
-}
+import React, { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import Modal from './Modal';
+import { useWeb3React } from '@web3-react/core';
+import { connectors } from '../lib/connectors';
+import { ellipseAddress } from '../lib/utilities';
+import useOnClickOutside from '../hooks/useOnClickOutside';
+import useConnectWallet from '../hooks/useConnectWallet';
 
 export default function ConnectWalletButton() {
-  const[state, dispatch] = useReducer(reducer, initialState)
-  const { provider, web3Provider, address, chainId } = state
+  const ref = useRef();
+  const [isModalOpen, setModalOpen] = useState(false);
+  const { activate } = useWeb3React();
 
-  const connect = useCallback(async function () {
-    try {
-      // This is the initial `provider` that is returned when
-      // using web3Modal to connect. For mobile, metamask wont work.
-      const provider = await web3Modal.connect()
+  useOnClickOutside(ref, () => setModalOpen(false));
 
-      // We plug the initial `provider` into ethers.js and get back
-      // a Web3Provider. This will add on methods from ethers.js and
-      // event listeners such as `.on()` will be different.
-      const web3Provider = new providers.Web3Provider(provider)
+  const { connect, disconnect, account, loading } = useConnectWallet();
 
-      const signer = web3Provider.getSigner()
-      const address = await signer.getAddress()
-
-      const network = await web3Provider.getNetwork()
-
-      dispatch({
-        type: 'SET_WEB3_PROVIDER',
-        provider,
-        web3Provider,
-        address,
-        chainId: network.chainId,
-      })
-    } catch (error) {
-      console.log({ error })
-    }
-  }, [])
-
-  const disconnect = useCallback(
-    async function () {
-      try {
-        await web3Modal.clearCachedProvider()
-        if (provider?.disconnect && typeof provider.disconnect === 'function') {
-          await provider.disconnect()
-        }
-        dispatch({
-          type: 'RESET_WEB3_PROVIDER',
-        })
-      } catch (error) {
-        console.log({ error })
-      }
-    },
-    [provider]
-  )
-
-  // Auto connect to the cached provider
-  useEffect(() => {
-    if (web3Modal.cachedProvider) {
-      connect()
-    }
-  }, [connect])
-
-  // A `provider` should come with EIP-1193 events. We'll listen for those events
-  // here so that when a user switches accounts or networks, we can update the
-  // local React state with that new information.
-  useEffect(() => {
-    if (provider?.on) {
-      const handleAccountsChanged = (accounts) => {
-        try {
-          // eslint-disable-next-line no-console
-          console.log('accountsChanged', accounts)
-          dispatch({
-            type: 'SET_ADDRESS',
-            address: accounts[0],
-          })
-        } catch (error) {
-          console.log({ error })
-        }
-      }
-
-      // https://docs.ethers.io/v5/concepts/best-practices/#best-practices--network-changes
-      const handleChainChanged = (_hexChainId) => {
-        window.location.reload()
-      }
-
-      const handleDisconnect = (error) => {
-        // eslint-disable-next-line no-console
-        console.log('disconnect', error)
-        disconnect()
-      }
-
-      provider.on('accountsChanged', handleAccountsChanged)
-      provider.on('chainChanged', handleChainChanged)
-      provider.on('disconnect', handleDisconnect)
-
-      // Subscription Cleanup
-      return () => {
-        if (provider.removeListener) {
-          provider.removeListener('accountsChanged', handleAccountsChanged)
-          provider.removeListener('chainChanged', handleChainChanged)
-          provider.removeListener('disconnect', handleDisconnect)
-        }
-      }
-    }
-  }, [provider, disconnect])
-
-  const chainData = getChainData(chainId)
+  if (loading) {
+    return <button className="button-dark" type="button" disabled>
+      Loading...
+    </button>
+  }
 
   return (
     <div className='connect-button'>
-      {address ? (
+      {account ? (
         <div>
-          {/* open a modal to disconnect */}
-          <div onClick={disconnect}>
-            <p style={{ textAlign: 'center' }}>{ellipseAddress(address)}</p>
+          <div onClick={() => setModalOpen(true)}>
+            <p style={{ textAlign: 'center', margin: 0 }}>{ellipseAddress(account)}</p>
           </div>
         </div>
-      ) : web3Provider ? (
-        <button className="button-dark" type="button" onClick={disconnect}>
-          Disconnect
-        </button>
       ) : (
-        // open a modal that shows this button
-        <button className="button-dark" type="button" onClick={connect}>
-          Connect
-        </button>
+          <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
+            Connect
+          </button>
       ) }
+
+      <Modal
+        ref={ref}
+        onClose={() => setModalOpen(false)}
+        show={isModalOpen}
+      >
+        {
+          account ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center'
+            }}>
+              <p style={{ textAlign: 'center', margin: '10px 0'}}>{ellipseAddress(account)}</p>
+              <button onClick={() => {
+                setModalOpen(false)
+                disconnect()
+              }} style={{ padding: 10, cursor: 'pointer' }}>Disconnect</button>
+            </div>
+          ) : (
+            <>
+              <h1 style = {{
+                fontSize: 44,
+                fontWeight: 700,
+                paddingBottom: 29
+              }}>Connect Wallet</h1>
+              <p style={{ fontSize: 22 }}>Please authorize this website to access your Ethereum account.</p>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}>
+                <button onClick={() => {
+                  setModalOpen(false)
+                  activate(connectors.coinbaseWallet)
+                }}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      verticalAlign: 'middle',
+                      textAlign: 'center',
+                      alignItems: 'center',
+                      padding: 10,
+                      cursor: 'pointer'
+                    }}
+                >
+                  <Image
+                    loader={({ src, width, quality }) => {
+                      return `${src}?w=${width}&q=${quality || 75}`
+                    }}
+                    src='/images/coinbase.png'
+                    alt='coinbase'
+                    width={30}
+                    height={30}
+                    style={{
+                      cursor: 'pointer',
+                    }}
+                  />
+                    <p style={{
+                      margin: 0,
+                      paddingLeft: 10,
+                    }}>Coinbase Wallet</p>
+                </button>
+                <button onClick={() => {
+                  setModalOpen(false)
+                  connect()
+                }}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    verticalAlign: 'middle',
+                    textAlign: 'center',
+                    alignItems: 'center',
+                    padding: 10,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Image
+                    loader={({ src, width, quality }) => {
+                      return `${src}?w=${width}&q=${quality || 75}`
+                    }}
+                    src='/images/metamask.png'
+                    alt='metamask'
+                    width={30}
+                    height={30}
+                    style={{
+                      cursor: 'pointer',
+                    }}
+                  />
+                    <p style={{
+                      margin: 0,
+                      paddingLeft: 10,
+                    }}>Metamask</p>
+                </button>
+              </div>
+            </>
+          )
+        }
+      </Modal>
     </div>
   )
 }
