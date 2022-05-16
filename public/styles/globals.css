@@ -145,7 +145,61 @@ section {
 }
 
 .invisible {
-  width: 200px;
+  width: 150px;
+}
+
+/* connect wallet */
+.modal-title {
+  font-size: 44px;
+  font-weight: 700;
+  padding-bottom: 29px;
+}
+
+.modal-body-text {
+  font-size: 22px;
+}
+
+.connect-btn-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.connect-btn {
+  display: flex;
+  justify-content: center;
+  vertical-align: middle;
+  text-align: center;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+}
+
+.connect-btn-label {
+  margin: 0;
+  padding-left: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: Marvel;
+  color: #000;
+}
+
+.disconnect-btn {
+  padding: 10px;
+  cursor: pointer;
+  margin: 5px;
+  border-radius: 10px;
+  font-family: Marvel;
+  font-size: 20px;
+  border: none;
+}
+
+.wallet-address {
+  text-align: center;
+  margin: 10px 0;
 }
 
 @media only screen and (max-width: 1023px) {

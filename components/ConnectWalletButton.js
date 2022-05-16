@@ -1,19 +1,55 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Modal from './Modal';
 import { ellipseAddress } from '../lib/utilities';
 import useOnClickOutside from '../hooks/useOnClickOutside';
 import useConnectWallet from '../hooks/useConnectWallet';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 export default function ConnectWalletButton() {
   const ref = useRef();
   const [isModalOpen, setModalOpen] = useState(false);
-  const { connect, disconnect, account, loading, hasProvider } = useConnectWallet();
+  const [loading, setLoading] = useState(true)
+  const [provider, setProvider] = useState(null)
+
+  const { connect, disconnect, myAccount } = useConnectWallet(provider);
   useOnClickOutside(ref, () => setModalOpen(false));
+
+  const handleProvider = async () => {
+    const ethProvider = await detectEthereumProvider()
+
+    if (ethProvider) {
+      setProvider(ethProvider)
+    }
+
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
+  }
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (isMounted) handleProvider()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const connectWallet = (type) => {
+    setModalOpen(false)
+    connect(type)
+  }
+
+  const disconnectWallet = () => {
+    setModalOpen(false)
+    disconnect()
+  }
 
   if (loading) {
     return <div className='connect-button'>
-      <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
+      <button className="button-dark" type="button" disabled>
         Loading...
       </button>
     </div>
@@ -21,18 +57,16 @@ export default function ConnectWalletButton() {
 
   return (
     <div className='connect-button'>
-      {hasProvider && (
-        account ? (
-          <div>
-            <div onClick={() => setModalOpen(true)}>
-              <p style={{ textAlign: 'center', margin: 0 }}>{ellipseAddress(account)}</p>
-            </div>
+      {myAccount ? (
+        <div>
+          <div onClick={() => setModalOpen(true)}>
+            <p style={{ textAlign: 'center', margin: 0 }}>{ellipseAddress(myAccount)}</p>
           </div>
-        ) : (
-          <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
-            Connect
-          </button>
-        )
+        </div>
+      ) : (
+        <button className="button-dark" type="button" onClick={() => setModalOpen(true)}>
+          Connect
+        </button>
       )}
 
       <Modal
@@ -41,44 +75,19 @@ export default function ConnectWalletButton() {
         show={isModalOpen}
       >
         {
-          account ? (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center'
-            }}>
-              <p style={{ textAlign: 'center', margin: '10px 0'}}>{ellipseAddress(account)}</p>
-              <button onClick={() => {
-                setModalOpen(false)
-                disconnect()
-              }} style={{ padding: 10, cursor: 'pointer' }}>Disconnect</button>
+          myAccount ? (
+            <div className='connect-btn-container'>
+              <p className='wallet-address'>{ellipseAddress(myAccount)}</p>
+              <button onClick={() => disconnectWallet()} className='disconnect-btn'>Disconnect</button>
             </div>
           ) : (
             <>
-              <h1 style = {{
-                fontSize: 44,
-                fontWeight: 700,
-                paddingBottom: 29
-              }}>Connect Wallet</h1>
-              <p style={{ fontSize: 22 }}>Please authorize this website to access your Ethereum account.</p>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
-              }}>
-                <button onClick={() => {
-                  setModalOpen(false)
-                  connect('coinbaseWallet')
-                }}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      verticalAlign: 'middle',
-                      textAlign: 'center',
-                      alignItems: 'center',
-                      padding: 10,
-                      cursor: 'pointer'
-                    }}
+              <h1 className='modal-title'>Connect Wallet</h1>
+              <p className='modal-body-text'>Please authorize this website to access your Ethereum account.</p>
+              <div className='connect-btn-container'>
+                <button
+                  className='connect-btn'
+                  onClick={() => connectWallet('coinbaseWallet')}
                 >
                   <Image
                     loader={({ src, width, quality }) => {
@@ -92,42 +101,30 @@ export default function ConnectWalletButton() {
                       cursor: 'pointer',
                     }}
                   />
-                    <p style={{
-                      margin: 0,
-                      paddingLeft: 10,
-                    }}>Coinbase Wallet</p>
+                  <p className='connect-btn-label'>Coinbase</p>
                 </button>
-                <button onClick={() => {
-                  setModalOpen(false)
-                  connect('injected')
-                }}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    verticalAlign: 'middle',
-                    textAlign: 'center',
-                    alignItems: 'center',
-                    padding: 10,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Image
-                    loader={({ src, width, quality }) => {
-                      return `${src}?w=${width}&q=${quality || 75}`
-                    }}
-                    src='/images/metamask.png'
-                    alt='metamask'
-                    width={30}
-                    height={30}
-                    style={{
-                      cursor: 'pointer',
-                    }}
-                  />
-                    <p style={{
-                      margin: 0,
-                      paddingLeft: 10,
-                    }}>Metamask</p>
-                </button>
+                {
+                  provider && (
+                    <button
+                      className='connect-btn'
+                      onClick={() => connectWallet('injected')}
+                    >
+                      <Image
+                        loader={({ src, width, quality }) => {
+                          return `${src}?w=${width}&q=${quality || 75}`
+                        }}
+                        src='/images/metamask.png'
+                        alt='metamask'
+                        width={30}
+                        height={30}
+                        style={{
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <p className='connect-btn-label'>Metamask</p>
+                    </button>
+                  )
+                }
               </div>
             </>
           )
