@@ -15,6 +15,8 @@ axiosApiInstance.interceptors.request.use(
         'Authorization': `Bearer ${access.token}`,
         'Accept': 'application/json',
         'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET'
       }
     }
 
