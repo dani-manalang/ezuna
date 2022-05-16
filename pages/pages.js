@@ -7,6 +7,7 @@ import axios from 'axios';
 import constants from '../constants';
 import { TiChevronLeft } from 'react-icons/ti';
 import ConnectWalletButton from '../components/ConnectWalletButton';
+import axiosApiInstance from './api/axios-instance';
 
 const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt, withBorder = false }, ref) => {
   return (
@@ -35,8 +36,8 @@ export default function Pages() {
   const { chapterId } = router.query
 
   useEffect(() => {
-    if (chapterId) {
-      axios.get(`${constants.origin}/v1/comics/default/${chapterId}`).then(response => {
+    if (chapterId && chapterId !== 'undefined' && chapterId !== 'null') {
+      axiosApiInstance.get(`${constants.origin}/v1/comics/default/${chapterId}`).then(response => {
         setPages(response?.data?.pages)
       });
     }
