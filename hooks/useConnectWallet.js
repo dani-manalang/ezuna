@@ -79,7 +79,6 @@ const useConnectWallet = () => {
       setAccount(null)
       deactivate()
       localStorage.removeItem('address')
-      localStorage.removeItem('user')
       localStorage.removeItem('tokens')
     } catch (error) {
       console.log(error)

@@ -6,7 +6,6 @@ const getRefreshToken = async (walletAddress) => {
     const result = await axiosApiInstance.get(`${constants.origin}/v1/auth/wallet-login?code=${walletAddress}`)
 
     if (result) {
-      localStorage.setItem('user', JSON.stringify(result?.data?.user))
       localStorage.setItem('tokens', JSON.stringify(result?.data?.tokens))
     }
     
