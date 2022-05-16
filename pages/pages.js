@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import axios from 'axios';
 import constants from '../constants';
 import { TiChevronLeft } from 'react-icons/ti';
 import ConnectWalletButton from '../components/ConnectWalletButton';
