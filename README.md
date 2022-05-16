@@ -16,7 +16,7 @@ You can start editing the page by modifying `pages/index.js`. The page auto-upda
 
 
 ## To access via https
-If you want to test connect to metamask in mobile, this is only possible using walletconnect and accessing localhost via https. See this [step-by-step guide](https://medium.com/@greg.farrow1/nextjs-https-for-a-local-dev-server-98bb441eabd7) to setup https access locally.
+If you want to test connect to walletconnect in mobile, this is only possible using walletconnect and accessing localhost via https. See this [step-by-step guide](https://medium.com/@greg.farrow1/nextjs-https-for-a-local-dev-server-98bb441eabd7) to setup https access locally.
 
 ```bash
 npm run start-https

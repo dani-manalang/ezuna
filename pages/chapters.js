@@ -2,7 +2,6 @@ import React, { useEffect, forwardRef, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import axios from 'axios';
 import constants from '../constants';
 import { AiFillLock, AiFillUnlock } from 'react-icons/ai'
 import ConnectWalletButton from '../components/ConnectWalletButton';
@@ -36,7 +35,6 @@ export default function Chapters() {
 
     if (isMounted) {
       axiosApiInstance.get(`${constants.origin}/v1/comics/default`).then(response => {
-        console.log({ response })
         setChapters(response?.data?.chapters);
       })
     }
