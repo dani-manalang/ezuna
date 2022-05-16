@@ -6,6 +6,7 @@ import axios from 'axios';
 import constants from '../constants';
 import { AiFillLock, AiFillUnlock } from 'react-icons/ai'
 import ConnectWalletButton from '../components/ConnectWalletButton';
+import axiosApiInstance from './api/axios-instance';
 
 const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt, withBorder = false }, ref) => {
   return (
@@ -29,12 +30,20 @@ const ImageComponent = forwardRef(({ onClick, href, link, height, width, alt, wi
 
 export default function Chapters() {
   const [chapters, setChapters] = useState([]);
-  
-  useEffect(() => {
-    axios.get(`${constants.origin}/v1/comics/default`).then(response => {
-      setChapters(response?.data?.chapters);
-    });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (isMounted) {
+      axiosApiInstance.get(`${constants.origin}/v1/comics/default`).then(response => {
+        console.log({ response })
+        setChapters(response?.data?.chapters);
+      })
+    }
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   return (
@@ -69,14 +78,14 @@ export default function Chapters() {
               <h5>Chapters</h5>
             </div>
             {
-              chapters.map((chapter) => {
+              chapters.map((chapter, index) => {
                 return (
-                  <div key={chapter.id}>
+                  <div key={String(index)} id={String(index)}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'center',
                     }}>
-                      <Link href={`/pages?chapterId=${chapter.id}`}>
+                      <Link href={`${!chapter.isLocked ? `/pages?chapterId=${chapter._id}` : `#${String(index)}`}`}>
                         <ImageComponent
                           link={`${constants.origin}${chapter.coverPhoto}`}
                           width={441}
@@ -94,7 +103,7 @@ export default function Chapters() {
                         lineHeight: '39px',
                         letterSpacing: '0.02em'
                       }}>
-                        {chapter.chapter == 1
+                        {!chapter.isLocked
                           ? (<AiFillUnlock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)
                         : (<AiFillLock height={32} width={28} style={{ marginBottom: -5, marginRight: 14 }} />)}
                         

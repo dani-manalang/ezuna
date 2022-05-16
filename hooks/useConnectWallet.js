@@ -4,6 +4,8 @@ import Web3 from 'web3';
 import { connectors } from '../lib/connectors';
 import axios from 'axios';
 import constants from "../constants";
+import axiosApiInstance from "../pages/api/axios-instance";
+import getRefreshToken from "../pages/api/getRefreshToken";
 
 let web3
 let address
@@ -16,13 +18,10 @@ const useConnectWallet = () => {
   const { activate, deactivate } = useWeb3React()
 
   const login = (walletAddress) => {
-    // fetch tokens
-    if (localStorage.getItem('tokens') === null) {
-      axios.get(`${constants.origin}/v1/auth/wallet-login?code=${walletAddress}`).then(response => {
-        localStorage.setItem('user', JSON.stringify(response?.data?.user))
-        localStorage.setItem('tokens', JSON.stringify(response?.data?.tokens))
-      })
-    }
+    getRefreshToken(walletAddress).then(() => {
+      // reload for the mean time since we dont have a global context/state management
+      window.location.reload()
+    })
   }
 
   const connectWalletHandler = () => {
@@ -80,7 +79,6 @@ const useConnectWallet = () => {
       setAccount(null)
       deactivate()
       localStorage.removeItem('address')
-      localStorage.removeItem('user')
       localStorage.removeItem('tokens')
     } catch (error) {
       console.log(error)
