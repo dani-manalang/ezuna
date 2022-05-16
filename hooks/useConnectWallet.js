@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import Web3 from 'web3';
 import { connectors } from '../lib/connectors';
+import axios from 'axios';
+import constants from "../constants";
+import axiosApiInstance from "../pages/api/axios-instance";
+import getRefreshToken from "../pages/api/getRefreshToken";
 
 let web3
 let address
@@ -9,9 +13,16 @@ let address
 const useConnectWallet = () => {
   const [account, setAccount] = useState()
   const [loading, setLoading] = useState(true)
-  const [hasProvider, setHasProvider] = useState(false);
-  const [provider, setProvider] = useState(null);
-  const { activate, deactivate } = useWeb3React();
+  const [hasProvider, setHasProvider] = useState(false)
+  const [provider, setProvider] = useState(null)
+  const { activate, deactivate } = useWeb3React()
+
+  const login = (walletAddress) => {
+    getRefreshToken(walletAddress).then(() => {
+      // reload for the mean time since we dont have a global context/state management
+      window.location.reload()
+    })
+  }
 
   const connectWalletHandler = () => {
     if (window.ethereum) {
@@ -29,19 +40,22 @@ const useConnectWallet = () => {
 
   const handleAccountChanged = async (type) => {
     await activate(connectors[type])
+    const cachedProvider = localStorage.getItem('provider') || 'none'
+    const account1 = await web3.eth.getAccounts()
 
-    if (localStorage.getItem('provider') !== null) {
-      const account1 = await web3.eth.getAccounts();
-
-      if (type === localStorage.getItem('provider')) {
-        if (account1.length) {
-          address = localStorage.setItem("address", account1[0])
-          localStorage.setItem('provider', type)
-          setAccount(account1[0])
-          setProvider(type)
-        } else {
-          disconnect()
-        }
+    // edge case:
+    // connected to wallet
+    // but cleared storage
+    // then select any wallet
+    if ((type === cachedProvider || (cachedProvider !== null && account1.length))) {
+      if (account1?.length) {
+        address = localStorage.setItem("address", account1[0])
+        localStorage.setItem('provider', type)
+        setAccount(account1[0])
+        setProvider(type)
+        login(account1[0])
+      } else {
+        disconnect()
       }
     }
   }
@@ -64,7 +78,8 @@ const useConnectWallet = () => {
     try {
       setAccount(null)
       deactivate()
-      localStorage.removeItem("address")
+      localStorage.removeItem('address')
+      localStorage.removeItem('tokens')
     } catch (error) {
       console.log(error)
     }
@@ -75,7 +90,7 @@ const useConnectWallet = () => {
     const account1 = await web3.eth.getAccounts();
 
     if (account1.length) {
-      address = localStorage.setItem("address", account1[0])
+      localStorage.setItem('address', account1[0])
       localStorage.setItem('provider', type)
       setAccount(account1[0])
     } else {
@@ -86,7 +101,7 @@ const useConnectWallet = () => {
   useEffect(() => {
     let isMounted = true
     address = localStorage.getItem('address')
-    const cachedProvider = localStorage.getItem('provider')
+    const cachedProvider = localStorage.getItem('provider') || 'none'
 
     if (isMounted) {
       setProvider(cachedProvider)
@@ -103,21 +118,20 @@ const useConnectWallet = () => {
   }, [])
 
   useEffect(() => {
-    if (window?.ethereum) {
+    if (window?.ethereum && account !== null) {
       window.ethereum.on('accountsChanged', () => {
-        console.log('accounts changed')
+        localStorage.removeItem('provider')
         disconnect()
       });
 
       window.ethereum.on('chainChanged', () => {
         if (typeof window !== undefined) {
-          console.log('chain changed')
           window.location.reload();
         }
       })
 
-      window.ethereum.removeListener('accountsChanged', () => { })
-      window.ethereum.removeListener('chainChanged', () => { })
+      window.ethereum.removeListener('accountsChanged', disconnect)
+      window.ethereum.removeListener('chainChanged', () => {})
     }
   }, [web3])
 
