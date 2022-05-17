@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import constants from '../constants';
 import { TiChevronLeft } from 'react-icons/ti';
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import axiosApiInstance from './api/axios-instance';
@@ -36,7 +35,7 @@ export default function Pages() {
 
   useEffect(() => {
     if (chapterId && chapterId !== 'undefined' && chapterId !== 'null') {
-      axiosApiInstance.get(`${constants.origin}/v1/comics/default/${chapterId}`).then(response => {
+      axiosApiInstance.get(`${process.env.API}/v1/comics/default/${chapterId}`).then(response => {
         setPages(response?.data?.pages)
       });
     }
@@ -90,7 +89,7 @@ export default function Pages() {
                           loader={({ src, width, quality }) => {
                             return `${src}?w=${width}&q=${quality || 75}`
                           }}
-                          src={`${constants.origin}${page.imageUrl}`}
+                          src={`${process.env.API}${page.imageUrl}`}
                           width={449}
                           height={333}
                           alt="page"

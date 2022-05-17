@@ -2,7 +2,6 @@ import React, { useEffect, forwardRef, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import constants from '../constants';
 import { AiFillLock, AiFillUnlock } from 'react-icons/ai'
 import ConnectWalletButton from '../components/ConnectWalletButton';
 import axiosApiInstance from './api/axios-instance';
@@ -34,7 +33,7 @@ export default function Chapters() {
     let isMounted = true;
 
     if (isMounted) {
-      axiosApiInstance.get(`${constants.origin}/v1/comics/default`).then(response => {
+      axiosApiInstance.get(`${process.env.API}/v1/comics/default`).then(response => {
         setChapters(response?.data?.chapters);
       })
     }
@@ -85,7 +84,7 @@ export default function Chapters() {
                     }}>
                       <Link href={`${!chapter.isLocked ? `/pages?chapterId=${chapter._id}` : `#${String(index)}`}`}>
                         <ImageComponent
-                          link={`${constants.origin}${chapter.coverPhoto}`}
+                          link={`${process.env.API}${chapter.coverPhoto}`}
                           width={441}
                           height={325}
                           alt="chapter"
