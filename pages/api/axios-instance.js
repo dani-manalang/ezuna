@@ -29,15 +29,14 @@ axiosApiInstance.interceptors.response.use((response) => {
   return response
 }, async function (error) {
   const originalRequest = error.config;
-  if (error.response.status === 403 && !originalRequest._retry) {
+  if (error.response.status === 401 && !originalRequest._retry) {
     originalRequest._retry = true;
     // always fetch address to be able to fetch tokens
     const address = localStorage.getItem('address')
-    const tokens = getRefreshToken(address)
+    const tokens = await getRefreshToken(address)
 
     if (tokens) {
-      const { access } = tokens
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + access.token;
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + tokens?.access?.token;
     }
     
     return axiosApiInstance(originalRequest);
