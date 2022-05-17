@@ -31,6 +31,7 @@ axiosApiInstance.interceptors.response.use((response) => {
   const originalRequest = error.config;
   if (error.response.status === 403 && !originalRequest._retry) {
     originalRequest._retry = true;
+    // always fetch address to be able to fetch tokens
     const address = localStorage.getItem('address')
     const tokens = getRefreshToken(address)
 
