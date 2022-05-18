@@ -14,7 +14,9 @@ const useConnectWallet = (provider) => {
 
   const handleAccountChanged = async (type) => {
     try {
-      await activate(connectors[type])
+      if (type != null) {
+        await activate(connectors[type])
+      }
     } catch (error) {
       console.log(error)
     }
@@ -87,7 +89,7 @@ const useConnectWallet = (provider) => {
   useEffect(() => {
     let isMounted = true;
 
-    if (isMounted && account !== undefined) {
+    if (isMounted && account !== undefined && wallet != null) {
         setMyAccount(account)
         localStorage.setItem('provider', wallet)
         localStorage.setItem('address', account)
