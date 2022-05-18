@@ -35,6 +35,8 @@ const useConnectWallet = (provider) => {
       deactivate()
       localStorage.removeItem('address')
       localStorage.removeItem('tokens')
+
+      window.location.reload()
     } catch (error) {
       console.log(error)
     }
@@ -58,7 +60,9 @@ const useConnectWallet = (provider) => {
   }, [])
 
   useEffect(() => {
-    if (window?.ethereum) {
+    let isMounted = true;
+
+    if (window?.ethereum && isMounted) {
       window.ethereum.on('accountsChanged', (newAccount) => {
         if (!newAccount.length) {
           localStorage.removeItem('provider')
@@ -71,9 +75,12 @@ const useConnectWallet = (provider) => {
           window.location.reload();
         }
       })
+    }
 
-      window.ethereum.removeListener('accountsChanged', disconnect)
+    return () => {
+      window.ethereum.removeListener('accountsChanged', () => {})
       window.ethereum.removeListener('chainChanged', () => { })
+      isMounted = false;
     }
   }, [provider])
 
@@ -84,6 +91,10 @@ const useConnectWallet = (provider) => {
         setMyAccount(account)
         localStorage.setItem('provider', wallet)
         localStorage.setItem('address', account)
+    }
+
+    if (isMounted && localStorage.getItem('address') !== null) {
+      setMyAccount(localStorage.getItem('address'))
     }
 
     return () => {
