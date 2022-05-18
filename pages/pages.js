@@ -81,17 +81,15 @@ export default function Pages() {
                 return (
                   <div key={page.id}>
                     <div>
-                      <div style={{
-                        position: 'relative',
-                      }}>
+                      <div style={{ display: 'flex', justifyContent: 'center'}}>
                         <Image
                           loader={({ src, width, quality }) => {
                             return `${src}?w=${width}&q=${quality || 75}`
                           }}
                           src={`${process.env.API}${page.imageUrl}`}
-                          width={449}
-                          height={333}
-                          layout='responsive'
+                          width={900}
+                          height={1200}
+                          layout='intrinsic'
                           objectFit='contain'
                           alt="page"
                         />
