@@ -54,7 +54,7 @@ export default function Home() {
             <Link href="/">
               <ImageComponent
                 link="/images/ezuna-kage-metakages.png"
-                alt="Picture of the author"
+                alt="ezuna kage"
                 width={300}
                 height={300}
               />
@@ -73,7 +73,7 @@ export default function Home() {
                   return `${src}?w=${width}&q=${quality || 75}`
                 }}
                 src="/images/1-EzunaBg.png"
-                alt="Picture of the author"
+                alt="ezuna background"
                 width={1300}
                 height={1280}
                 priority
@@ -162,7 +162,7 @@ export default function Home() {
                   return `${src}?w=${width}&q=${quality || 75}`
                 }}
                 src="/images/metakage-webapp-kageapp-2048x1676.png"
-                alt="Picture of the author"
+                alt="metakage webapp"
                 width={1024}
                 height={838}
               />
@@ -189,7 +189,7 @@ export default function Home() {
                   return `${src}?w=${width}&q=${quality || 75}`
                 }}
                 src="/images/FNiK8hOVEAMYbaM-788x1024.jpg"
-                alt="Picture of the author"
+                alt="ezuna"
                 width={923}
                 height={1200}
               />
